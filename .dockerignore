@@ -1,0 +1,11 @@
+.venv
+.env
+data
+logs
+tests
+__pycache__
+.pytest_cache
+*.md
+deploy.zip
+.git
+make_deploy.ps1

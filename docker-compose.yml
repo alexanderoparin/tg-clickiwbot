@@ -1,0 +1,19 @@
+services:
+  bot:
+    build: .
+    image: wb-drr-bot
+    container_name: wb-drr-bot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /app/data
+      TZ: Europe/Moscow
+    volumes:
+      - ./data:/app/data        # база с историей, загруженные выгрузки, кеш file_id
+      - ./logs:/app/logs        # logs/bot.log (ротация 5 МБ × 3)
+      - ./assets:/app/assets:ro # видео, PDF, логотип — меняются без пересборки
+    logging:                    # вывод контейнера (docker compose logs) — тоже с ротацией
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,10 @@
+.env
+data/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+logs/
+deploy.zip
+.claude/
+Бот для клики/
