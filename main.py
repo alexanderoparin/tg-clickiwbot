@@ -5,6 +5,7 @@ from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramNetworkError
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -88,7 +89,15 @@ async def main() -> None:
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     db = Database(config.DB_PATH)
     await db.init()
-    bot = Bot(config.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    session = None
+    if config.TELEGRAM_PROXY:
+        session = AiohttpSession(proxy=config.TELEGRAM_PROXY)
+        logging.info("Telegram API через прокси: %s", _mask_proxy(config.TELEGRAM_PROXY))
+    bot = Bot(
+        config.BOT_TOKEN,
+        session=session,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+    )
     # file_id привязаны к боту: сменили BOT_TOKEN → кеш видео и PDF сбрасывается.
     # bot.id — из токена (<id>:<секрет>), совпадает с id из getMe и не требует сети
     reset_cache_for_bot(config.MEDIA_CACHE, bot.id)
@@ -99,6 +108,17 @@ async def main() -> None:
         await poll_forever(dp, bot)
     finally:
         cleanup.cancel()
+        if session is not None:
+            await session.close()
+
+
+def _mask_proxy(url: str) -> str:
+    """Скрывает логин/пароль в URL прокси для логов."""
+    if "@" not in url:
+        return url
+    scheme, rest = url.split("://", 1) if "://" in url else ("", url)
+    creds, host = rest.rsplit("@", 1)
+    return f"{scheme}://***@{host}" if scheme else f"***@{host}"
 
 
 async def poll_forever(dp: Dispatcher, bot: Bot, retry_delay: float = STARTUP_RETRY_SEC) -> None:

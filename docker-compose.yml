@@ -1,13 +1,32 @@
 services:
+  xray:
+    image: teddysun/xray:latest
+    container_name: wb-drr-xray
+    restart: unless-stopped
+    volumes:
+      - ./deploy/xray/config.json:/etc/xray/config.json:ro
+    # Только внутренняя сеть compose — SOCKS не торчит наружу
+    expose:
+      - "1080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
   bot:
     build: .
     image: wb-drr-bot
     container_name: wb-drr-bot
     restart: unless-stopped
+    depends_on:
+      - xray
     env_file: .env
     environment:
       DATA_DIR: /app/data
       TZ: Europe/Moscow
+      # Трафик к Telegram API через локальный SOCKS от xray (VLESS Reality)
+      TELEGRAM_PROXY: socks5://xray:1080
     volumes:
       - ./data:/app/data        # база с историей, загруженные выгрузки, кеш file_id
       - ./logs:/app/logs        # logs/bot.log (ротация 5 МБ × 3)

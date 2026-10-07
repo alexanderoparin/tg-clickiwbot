@@ -9,6 +9,9 @@ load_dotenv(BASE_DIR / ".env")
 
 # --- окружение ---
 BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
+# Исходящий прокси к Telegram API (socks5://host:port или http://host:port).
+# Пусто — прямое подключение. Нужен, если с сервера api.telegram.org недоступен.
+TELEGRAM_PROXY: str = os.getenv("TELEGRAM_PROXY", "").strip()
 
 
 def _ids(name: str) -> set[int]:

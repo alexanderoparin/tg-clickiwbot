@@ -8,3 +8,4 @@ logs/
 deploy.zip
 .claude/
 Бот для клики/
+deploy/xray/config.json
